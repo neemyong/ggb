@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 가계부</title>
+<style>
+:root {
+  --blue-900: #0f2f5f;
+  --blue-700: #1d4ed8;
+  --blue-600: #2563eb;
+  --blue-500: #3b82f6;
+  --blue-100: #dbeafe;
+  --blue-50: #eef4ff;
+  --expense: #ef6f6f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: linear-gradient(180deg, var(--blue-50) 0%, #f4f7fc 220px);
+  color: #1e293b;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px 60px;
+}
+
+header {
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+  margin: 0 -16px 20px;
+  padding: 28px 16px 22px;
+  border-radius: 0 0 24px 24px;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+
+header h1 {
+  text-align: center;
+  font-size: 1.6rem;
+  margin: 0;
+  color: #fff;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+  border: 1px solid var(--blue-100);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card .label {
+  font-size: 0.8rem;
+  color: #6b7a99;
+}
+
+.card .value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.card.income .value { color: var(--blue-600); }
+.card.expense .value { color: var(--expense); }
+.card.balance .value { color: var(--blue-900); }
+
+section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--blue-100);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
+}
+
+h2 {
+  font-size: 1rem;
+  margin: 0 0 12px;
+  color: var(--blue-900);
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+input, select, button {
+  font-size: 0.95rem;
+  padding: 8px 10px;
+  border: 1px solid var(--blue-100);
+  border-radius: 8px;
+  flex: 1;
+  color: #1e293b;
+}
+
+input:focus, select:focus, .dropdown-toggle:focus {
+  outline: none;
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+button {
+  background: var(--blue-600);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  flex: none;
+}
+
+button:hover {
+  background: var(--blue-700);
+}
+
+.dropdown {
+  position: relative;
+  flex: 1;
+}
+
+.dropdown-toggle {
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  color: #1e293b;
+  font-weight: 400;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdown-toggle:hover {
+  background: #fff;
+}
+
+.dropdown-toggle::after {
+  content: "▾";
+  color: var(--blue-500);
+  margin-left: 6px;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--blue-100);
+  border-radius: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  z-index: 20;
+  display: none;
+}
+
+.dropdown-list.open {
+  display: block;
+}
+
+.dropdown-list li {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.dropdown-list li:hover,
+.dropdown-list li.active {
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-section label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  color: #475569;
+}
+
+.filter-section #clearFilter {
+  background: var(--blue-900);
+  flex: none;
+  width: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+th, td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--blue-50);
+}
+
+th {
+  color: var(--blue-900);
+  font-weight: 600;
+  background: var(--blue-50);
+}
+
+tr.income td.amount { color: var(--blue-600); }
+tr.expense td.amount { color: var(--expense); }
+
+.del-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.del-btn:hover {
+  color: var(--expense);
+}
+
+.empty-msg {
+  text-align: center;
+  color: #94a3b8;
+  padding: 20px 0;
+  display: none;
+}
+
+.stats-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.stats-tab {
+  flex: 1;
+  background: var(--blue-50);
+  color: var(--blue-900);
+  font-weight: 600;
+}
+
+.stats-tab.active {
+  background: var(--blue-600);
+  color: #fff;
+}
+
+.stats-chart-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.donut {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex: none;
+  border-radius: 50%;
+}
+
+.donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--blue-100);
+}
+
+.donut-center .donut-total {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--blue-900);
+}
+
+.donut-center .donut-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.legend-item .legend-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.legend-item .legend-amount {
+  font-weight: 600;
+  color: var(--blue-900);
+}
+
+.legend-item .legend-pct {
+  color: #94a3b8;
+  font-size: 0.78rem;
+  width: 36px;
+  text-align: right;
+}
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>💰 나의 가계부</h1>
+    </header>
+
+    <section class="summary">
+      <div class="card income">
+        <span class="label">총 수입</span>
+        <span class="value" id="totalIncome">0원</span>
+      </div>
+      <div class="card expense">
+        <span class="label">총 지출</span>
+        <span class="value" id="totalExpense">0원</span>
+      </div>
+      <div class="card balance">
+        <span class="label">잔액</span>
+        <span class="value" id="balance">0원</span>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2>내역 추가</h2>
+      <form id="entryForm">
+        <div class="form-row">
+          <label>
+            <input type="radio" name="type" value="income" checked> 수입
+          </label>
+          <label>
+            <input type="radio" name="type" value="expense"> 지출
+          </label>
+        </div>
+        <div class="form-row">
+          <input type="date" id="date" required>
+          <div class="dropdown" id="categoryDropdown">
+            <button type="button" class="dropdown-toggle" id="categoryToggle"></button>
+            <input type="hidden" id="category">
+            <ul class="dropdown-list" id="categoryList"></ul>
+          </div>
+        </div>
+        <div class="form-row">
+          <input type="text" id="memo" placeholder="메모 (선택)">
+          <input type="number" id="amount" placeholder="금액" min="0" required>
+        </div>
+        <button type="submit">추가하기</button>
+      </form>
+    </section>
+
+    <section class="filter-section">
+      <label>월 선택:
+        <input type="month" id="monthFilter">
+      </label>
+      <button id="clearFilter">전체 보기</button>
+    </section>
+
+    <section class="stats-section">
+      <h2>분류별 통계</h2>
+      <div class="stats-tabs">
+        <button type="button" class="stats-tab active" data-type="expense">지출</button>
+        <button type="button" class="stats-tab" data-type="income">수입</button>
+      </div>
+      <div class="stats-chart-wrap" id="statsChartWrap">
+        <div class="donut" id="donut">
+          <div class="donut-center">
+            <span class="donut-total" id="donutTotal">0원</span>
+            <span class="donut-label">합계</span>
+          </div>
+        </div>
+        <div class="legend" id="statsBody"></div>
+      </div>
+      <p id="statsEmptyMsg" class="empty-msg">표시할 내역이 없습니다.</p>
+    </section>
+
+    <section class="list-section">
+      <h2>내역 목록</h2>
+      <table id="entryTable">
+        <thead>
+          <tr>
+            <th>날짜</th>
+            <th>구분</th>
+            <th>분류</th>
+            <th>메모</th>
+            <th>금액</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="entryBody"></tbody>
+      </table>
+      <p id="emptyMsg" class="empty-msg">아직 등록된 내역이 없습니다.</p>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://mqetkeslhkoumisqxhmo.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_kn91O4xNpb1MUEIY1xyOwA_ZXpQVCrH";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const STORAGE_KEY = "household-ledger-entries";
+    const MIGRATED_KEY = "household-ledger-migrated";
+
+    const CATEGORIES = {
+      income: ["급여", "용돈", "이자/투자", "기타수입"],
+      expense: ["식비", "교통", "주거/관리비", "의료", "쇼핑", "문화/여가", "교육", "기타지출"],
+    };
+
+    let entries = [];
+
+    const form = document.getElementById("entryForm");
+    const dateInput = document.getElementById("date");
+    const categorySelect = document.getElementById("category");
+    const categoryToggle = document.getElementById("categoryToggle");
+    const categoryList = document.getElementById("categoryList");
+    const memoInput = document.getElementById("memo");
+    const amountInput = document.getElementById("amount");
+    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const entryBody = document.getElementById("entryBody");
+    const emptyMsg = document.getElementById("emptyMsg");
+    const monthFilter = document.getElementById("monthFilter");
+    const clearFilterBtn = document.getElementById("clearFilter");
+    const statsTabs = document.querySelectorAll(".stats-tab");
+    const statsBody = document.getElementById("statsBody");
+    const statsEmptyMsg = document.getElementById("statsEmptyMsg");
+    const statsChartWrap = document.getElementById("statsChartWrap");
+    const donut = document.getElementById("donut");
+    const donutTotal = document.getElementById("donutTotal");
+    let statsType = "expense";
+
+    const PALETTE = ["#2563eb", "#0ea5e9", "#22c55e", "#f59e0b", "#ef6f6f", "#8b5cf6", "#14b8a6", "#64748b"];
+
+    function loadLocalEntries() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function migrateLocalEntriesIfNeeded() {
+      if (localStorage.getItem(MIGRATED_KEY)) return;
+
+      const local = loadLocalEntries();
+      if (local.length > 0) {
+        const rows = local.map((en) => ({
+          type: en.type,
+          date: en.date,
+          category: en.category,
+          memo: en.memo || "",
+          amount: en.amount,
+        }));
+        const { error } = await supabaseClient.from("entries").insert(rows);
+        if (error) {
+          console.error("마이그레이션 실패:", error);
+          return;
+        }
+      }
+      localStorage.setItem(MIGRATED_KEY, "1");
+    }
+
+    async function fetchEntries() {
+      const { data, error } = await supabaseClient
+        .from("entries")
+        .select("*")
+        .order("date", { ascending: false });
+      if (error) {
+        console.error("내역 조회 실패:", error);
+        alert("내역을 불러오지 못했습니다: " + error.message);
+        return [];
+      }
+      return data;
+    }
+
+    function formatWon(n) {
+      return n.toLocaleString("ko-KR") + "원";
+    }
+
+    function getSelectedType() {
+      return document.querySelector('input[name="type"]:checked').value;
+    }
+
+    function populateCategories() {
+      const type = getSelectedType();
+      const list = CATEGORIES[type];
+
+      categoryList.innerHTML = list
+        .map((c) => `<li data-value="${c}">${c}</li>`)
+        .join("");
+
+      selectCategory(list[0]);
+    }
+
+    function selectCategory(value) {
+      categorySelect.value = value;
+      categoryToggle.textContent = value;
+      categoryList.querySelectorAll("li").forEach((li) => {
+        li.classList.toggle("active", li.dataset.value === value);
+      });
+    }
+
+    function closeCategoryList() {
+      categoryList.classList.remove("open");
+    }
+
+    categoryToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      categoryList.classList.toggle("open");
+    });
+
+    categoryList.addEventListener("click", (e) => {
+      const li = e.target.closest("li");
+      if (!li) return;
+      selectCategory(li.dataset.value);
+      closeCategoryList();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#categoryDropdown")) closeCategoryList();
+    });
+
+    typeRadios.forEach((r) => r.addEventListener("change", populateCategories));
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!dateInput.value || !amountInput.value) {
+        alert("날짜와 금액을 입력해주세요.");
+        return;
+      }
+
+      const entry = {
+        type: getSelectedType(),
+        date: dateInput.value,
+        category: categorySelect.value,
+        memo: memoInput.value.trim(),
+        amount: Number(amountInput.value),
+      };
+
+      const { error } = await supabaseClient.from("entries").insert(entry);
+      if (error) {
+        alert("저장에 실패했습니다: " + error.message);
+        return;
+      }
+      entries = await fetchEntries();
+
+      const entryMonth = entry.date.slice(0, 7);
+      if (monthFilter.value && monthFilter.value !== entryMonth) {
+        monthFilter.value = entryMonth;
+      }
+
+      const selectedType = entry.type;
+      form.reset();
+      document.querySelector(`input[name="type"][value="${selectedType}"]`).checked = true;
+      dateInput.value = todayStr();
+      populateCategories();
+      render();
+    });
+
+    clearFilterBtn.addEventListener("click", () => {
+      monthFilter.value = "";
+      render();
+    });
+
+    monthFilter.addEventListener("change", render);
+
+    statsTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        statsType = tab.dataset.type;
+        statsTabs.forEach((t) => t.classList.toggle("active", t === tab));
+        render();
+      });
+    });
+
+    entryBody.addEventListener("click", async (e) => {
+      const btn = e.target.closest(".del-btn");
+      if (!btn) return;
+      const id = Number(btn.dataset.id);
+
+      const { error } = await supabaseClient.from("entries").delete().eq("id", id);
+      if (error) {
+        alert("삭제에 실패했습니다: " + error.message);
+        return;
+      }
+      entries = entries.filter((en) => en.id !== id);
+      render();
+    });
+
+    function todayStr() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    function getFilteredEntries() {
+      if (!monthFilter.value) return entries;
+      return entries.filter((en) => en.date.startsWith(monthFilter.value));
+    }
+
+    function render() {
+      const filtered = getFilteredEntries().slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+
+      let income = 0;
+      let expense = 0;
+      filtered.forEach((en) => {
+        if (en.type === "income") income += en.amount;
+        else expense += en.amount;
+      });
+
+      document.getElementById("totalIncome").textContent = formatWon(income);
+      document.getElementById("totalExpense").textContent = formatWon(expense);
+      document.getElementById("balance").textContent = formatWon(income - expense);
+
+      entryBody.innerHTML = filtered
+        .map(
+          (en) => `
+        <tr class="${en.type}">
+          <td>${en.date}</td>
+          <td>${en.type === "income" ? "수입" : "지출"}</td>
+          <td>${en.category}</td>
+          <td>${en.memo || "-"}</td>
+          <td class="amount">${en.type === "expense" ? "-" : "+"}${formatWon(en.amount)}</td>
+          <td><button class="del-btn" data-id="${en.id}">✕</button></td>
+        </tr>`
+        )
+        .join("");
+
+      emptyMsg.style.display = filtered.length === 0 ? "block" : "none";
+
+      renderStats(filtered);
+    }
+
+    function renderStats(filtered) {
+      const typeEntries = filtered.filter((en) => en.type === statsType);
+      const totals = {};
+      let total = 0;
+
+      typeEntries.forEach((en) => {
+        totals[en.category] = (totals[en.category] || 0) + en.amount;
+        total += en.amount;
+      });
+
+      const rows = CATEGORIES[statsType]
+        .map((c) => ({ category: c, amount: totals[c] || 0 }))
+        .filter((r) => r.amount > 0)
+        .sort((a, b) => b.amount - a.amount)
+        .map((r, i) => ({ ...r, color: PALETTE[i % PALETTE.length] }));
+
+      donutTotal.textContent = formatWon(total);
+      statsChartWrap.style.display = rows.length === 0 ? "none" : "flex";
+      statsEmptyMsg.style.display = rows.length === 0 ? "block" : "none";
+
+      if (rows.length === 0) return;
+
+      let acc = 0;
+      const stops = rows
+        .map((r) => {
+          const start = acc;
+          acc += (r.amount / total) * 100;
+          return `${r.color} ${start}% ${acc}%`;
+        })
+        .join(", ");
+      donut.style.background = `conic-gradient(${stops})`;
+
+      statsBody.innerHTML = rows
+        .map((r) => {
+          const pct = Math.round((r.amount / total) * 100);
+          return `
+        <div class="legend-item">
+          <span class="legend-dot" style="background:${r.color}"></span>
+          <span class="legend-name">${r.category}</span>
+          <span class="legend-amount">${formatWon(r.amount)}</span>
+          <span class="legend-pct">${pct}%</span>
+        </div>`;
+        })
+        .join("");
+    }
+
+    async function init() {
+      dateInput.value = todayStr();
+      populateCategories();
+      await migrateLocalEntriesIfNeeded();
+      entries = await fetchEntries();
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
